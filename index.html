@@ -1,0 +1,289 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>PathLab Test Add Request</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background-color: #f7f7f7;
+      margin: 0;
+      padding: 2em;
+    }
+    .container {
+      max-width: 600px;
+      margin: auto;
+      background: #fff;
+      padding: 20px;
+      border-radius: 8px;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+    }
+    h2 {
+      text-align: center;
+      margin-bottom: 0.5em;
+    }
+    .subheader {
+      text-align: center;
+      font-size: 0.95em;
+      color: #555;
+      margin-bottom: 1em;
+    }
+    label {
+      display: block;
+      margin-top: 15px;
+      font-weight: bold;
+    }
+    input[type="text"],
+    input[type="date"],
+    textarea {
+      width: 100%;
+      padding: 8px;
+      margin-top: 5px;
+      border: 1px solid #ccc;
+      border-radius: 4px;
+      box-sizing: border-box;
+    }
+    textarea {
+      resize: vertical;
+    }
+    /* Two-column layout for bottom fields */
+    .two-column-row {
+      display: flex;
+      justify-content: space-between;
+    }
+    .two-column-row .column {
+      flex: 0 0 48%;
+    }
+    /* Three-column layout for checkboxes */
+    .checkbox-group {
+      display: flex;
+      justify-content: space-between;
+    }
+    .checkbox-group .column {
+      flex: 0 0 32%;
+    }
+    .checkbox-group label {
+      font-weight: normal;
+      display: block;
+      margin: 5px 0;
+    }
+    button {
+      display: block;
+      width: 100%;
+      margin-top: 20px;
+      padding: 10px;
+      background-color: #007BFF;
+      color: white;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 16px;
+    }
+    button:hover {
+      background-color: #0056b3;
+    }
+    .error {
+      color: red;
+      margin-top: 10px;
+      display: none;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h2>PathLab Test Add Request</h2>
+    <p class="subheader">
+      Test add requests are monitored Monday-Friday, 8am-5pm. 
+      Outside of these hours, urgent Hospital test add requests require a hard copy to be sent to the laboratory.
+    </p>
+    <form id="testAddForm">
+      <label for="nhi">Patient NHI:</label>
+      <input type="text" id="nhi" name="nhi" placeholder="e.g., ABC1234" required>
+
+      <label for="date">Date of Original Request:</label>
+      <input type="date" id="date" name="date" required>
+
+      <label for="requesterName">Original Requestor:</label>
+      <input type="text" id="requesterName" name="requesterName" value="TED - Team ED" required>
+
+      <label for="department">Department:</label>
+      <input type="text" id="department" name="department" value="Emergency Department" required>
+
+      <label>Add-on Tests:</label>
+      <div class="checkbox-group">
+        <div class="column">
+          <label><input type="checkbox" name="tests" value="CBC"> CBC</label>
+          <label><input type="checkbox" name="tests" value="UEC"> UEC</label>
+          <label><input type="checkbox" name="tests" value="LFTs"> LFTs</label>
+          <label><input type="checkbox" name="tests" value="TFTs"> TFTs</label>
+        </div>
+        <div class="column">
+          <label><input type="checkbox" name="tests" value="Troponin"> Troponin</label>
+          <label><input type="checkbox" name="tests" value="CRP"> CRP</label>
+          <label><input type="checkbox" name="tests" value="Lipase"> Lipase</label>
+          <label><input type="checkbox" name="tests" value="CK"> CK</label>
+          <label><input type="checkbox" name="tests" value="bHCG"> bHCG</label>
+        </div>
+        <div class="column">
+          <label><input type="checkbox" name="tests" value="D-dimer"> D-dimer</label>
+          <label><input type="checkbox" name="tests" value="INR"> INR</label>
+        </div>
+      </div>
+
+      <label for="otherTests">Other tests:</label>
+      <textarea id="otherTests" name="otherTests" rows="4" placeholder="If not listed above, enter other tests required"></textarea>
+      
+      <label for="additionalClinicalInfo">Additional Clinical Information:</label>
+      <textarea id="additionalClinicalInfo" name="additionalClinicalInfo" rows="4" placeholder="Provide additional clinical information if necessary"></textarea>
+
+      <!-- Moved to the bottom in a two-column layout -->
+      <div class="two-column-row">
+        <div class="column">
+          <label for="addonRequesterName">Test Add Requestor:</label>
+          <input type="text" id="addonRequesterName" name="addonRequesterName" required>
+        </div>
+        <div class="column">
+          <label for="registrationNo">Registration No:</label>
+          <input type="text" id="registrationNo" name="registrationNo" required>
+        </div>
+      </div>
+
+      <!-- New Work Email field -->
+      <label for="workEmail">Work Email:</label>
+      <input type="text" id="workEmail" name="workEmail" required>
+
+      <div id="errorMessage" class="error"></div>
+
+      <button type="button" onclick="submitForm()">Submit</button>
+    </form>
+  </div>
+  <script>
+    // Helper function to strip out all special characters (allowing only letters, numbers, underscore, and whitespace)
+    function sanitize(input) {
+      return input.replace(/[^\w\s]/g, '');
+    }
+    
+    // Set the default date to today's date in yyyy-mm-dd format.
+    document.addEventListener('DOMContentLoaded', function() {
+      var today = new Date();
+      var dd = String(today.getDate()).padStart(2, '0');
+      var mm = String(today.getMonth() + 1).padStart(2, '0');
+      var yyyy = today.getFullYear();
+      document.getElementById('date').value = yyyy + '-' + mm + '-' + dd;
+    });
+
+    function submitForm() {
+      // Retrieve and trim values from the form fields.
+      var nhi = document.getElementById('nhi').value.trim();
+      var requesterName = document.getElementById('requesterName').value.trim();
+      var department = document.getElementById('department').value.trim();
+      var date = document.getElementById('date').value.trim();
+      var otherTests = document.getElementById('otherTests').value.trim();
+      var additionalClinicalInfo = document.getElementById('additionalClinicalInfo').value.trim();
+      var addonRequesterName = document.getElementById('addonRequesterName').value.trim();
+      var registrationNo = document.getElementById('registrationNo').value.trim();
+      var workEmail = document.getElementById('workEmail').value.trim();
+      var errorMessage = document.getElementById('errorMessage');
+
+      // Check if Date of Original Request is in the future.
+      var inputDate = new Date(date);
+      // Set inputDate's time to midnight.
+      inputDate.setHours(0,0,0,0);
+      var today = new Date();
+      today.setHours(0,0,0,0);
+      if (inputDate > today) {
+        errorMessage.textContent = 'The Date of Original Request cannot be in the future. Please correct the date.';
+        errorMessage.style.display = 'block';
+        return;
+      }
+
+      // Collect all add-on tests that were checked.
+      var selectedCheckboxes = document.querySelectorAll('input[name="tests"]:checked');
+      var checkboxSelected = selectedCheckboxes.length > 0;
+
+      // Check if any required fields are blank.
+      // Note: "Other tests" is only required if no checkbox is selected.
+      if (!nhi || !requesterName || !department || !date || (!checkboxSelected && !otherTests) || !addonRequesterName || !registrationNo || !workEmail) {
+        errorMessage.textContent = 'All fields are required. Please fill out any missing data.';
+        errorMessage.style.display = 'block';
+        return;
+      }
+
+      // Validate NHI format: three letters followed by four digits.
+      var nhiRegex = /^[A-Za-z]{3}\d{4}$/;
+      if (!nhiRegex.test(nhi)) {
+        errorMessage.textContent = 'Please enter a valid NHI in the format XXX1234 (three letters followed by four digits).';
+        errorMessage.style.display = 'block';
+        return;
+      }
+
+      // Validate the work email for proper format and domain.
+      var workEmailRegex = /^[A-Za-z0-9._%+-]+@bopdhb\.govt\.nz$/;
+      if (!workEmailRegex.test(workEmail)) {
+        errorMessage.textContent = 'Please enter a valid work email address with the domain @bopdhb.govt.nz.';
+        errorMessage.style.display = 'block';
+        return;
+      }
+
+      // Clear any error message.
+      errorMessage.style.display = 'none';
+
+      // Sanitize the user inputs (except workEmail which must remain intact).
+      nhi = sanitize(nhi);
+      requesterName = sanitize(requesterName);
+      department = sanitize(department);
+      otherTests = sanitize(otherTests);
+      additionalClinicalInfo = sanitize(additionalClinicalInfo);
+      addonRequesterName = sanitize(addonRequesterName);
+      registrationNo = sanitize(registrationNo);
+
+      // Build a numbered list for the selected add-on tests.
+      var testsList = '';
+      for (var i = 0; i < selectedCheckboxes.length; i++) {
+        testsList += (i + 1) + '. ' + selectedCheckboxes[i].value + '%0D%0A';
+      }
+
+      // Construct the email body with the required formatting.
+      var body = 'Patient NHI: ' + nhi + '%0D%0A' +
+                 'Date of Original Request: ' + date + '%0D%0A' +
+                 'Original Requestor: ' + requesterName + '%0D%0A' +
+                 'Department: ' + department + '%0D%0A' +
+                 '%0D%0A' + // extra newline
+                 'Test Add Requestor: ' + addonRequesterName + '%0D%0A' +
+                 'Registration No: ' + registrationNo + '%0D%0A' +
+                 'Work Email: ' + workEmail + '%0D%0A' +
+                 '%0D%0A' + // extra newline after Work Email
+                 'Add-on Tests:%0D%0A' + testsList;
+      
+      // Append "Other tests:" only if the field is not blank.
+      if (otherTests !== "") {
+        body += '%0D%0AOther tests:%0D%0A' + otherTests + '%0D%0A';
+      }
+      
+      // Append a newline and Additional Clinical Information if provided.
+      if (additionalClinicalInfo.length > 0) {
+        body += '%0D%0AAdditional Clinical Information:%0D%0A' + additionalClinicalInfo;
+      }
+      
+      // Append the polite closing message.
+      body += '%0D%0A%0D%0AThank you for your assistance adding on the requested tests!';
+      
+      // Build the subject line by appending the Department field.
+      var subject = 'Test Add Required: ' + department;
+      
+      // Build the mailto URL and include a CC field with the user's work email.
+      var mailtoLink = 'mailto:plbop.testadd@pathlab.co.nz?subject=' + subject + '&body=' + body + '&cc=' + workEmail;
+      
+      // If the Department is "Emergency Department", append headers for high priority.
+      if (department.toLowerCase() === "emergency department") {
+        mailtoLink += '&X-Priority=1&Importance=High';
+      }
+      
+      // Prompt the user to confirm the details before submission.
+      if (confirm("Are you sure the details you entered are correct before submitting this request to PathLab?")) {
+        window.location.href = mailtoLink;
+      }
+    }
+  </script>
+</body>
+</html>
